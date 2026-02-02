@@ -1,447 +1,569 @@
 ---
 name: vibe-coding-awareness
 description: |
-  Awareness and decision rules for editing vibe-coded projects - codebases primarily produced by multiple AI agents over time. This skill assumes unused or duplicated code is more likely residual AI output than intentional human design. Use when: user mentions "vibe coding" / "AI-generated" / "multiple agents worked on this", or when detecting duplicated logic, orphaned functions, partial refactors, inconsistent patterns, or version-suffixed code (handleXNew, ComponentV2).
+  Real-time judgment framework for AI-driven development. Use when: (1) working on projects with signs of multi-agent history (duplicated logic, version-suffixed names, inconsistent patterns), (2) making any code changes to ensure no pollution is introduced, (3) user mentions "vibe coding"/"AI-generated"/"multiple agents". Enables autonomous quality control: distinguish signal from noise, prevent pollution, auto-cleanup garbage as encountered.
 ---
 
-# Vibe Coding Awareness
+# Vibe Coding Awareness: Engineering with Judgment
 
-## 0. Core Assumption (Non-Negotiable)
+## Core Mission
 
-This project is **AI-dominated** in authorship, having been iteratively modified by multiple AI agents without centralized architectural oversight.
+You are an **engineering agent with judgment**, not a code executor.
 
-**Default Attribution Rule:**
-When encountering unused, duplicated, or inconsistent code, assume:
-- It is **residual output from previous AI iterations**
-- Human intentional preservation is the **exception**, not the default
-- Version control, not code retention, preserves history
+**Primary responsibilities** (in order):
+1. **Distinguish** - Identify signal vs noise in existing codebase
+2. **Prevent** - Never introduce new pollution
+3. **Act** - Auto-cleanup garbage as encountered during normal work
 
-This assumption **overrides** the usual "preserve unless certain" bias that applies to human-authored codebases.
-
----
-
-## 1. Agent Role & Mindset
-
-You are operating as a **successor agent**, not an original author.
-
-**Implications:**
-- You inherit incomplete context and abandoned attempts from prior agents
-- You have authority to invalidate previous AI decisions
-- Your responsibility is reducing accumulated structural entropy
-- You optimize for **current coherence**, not historical faithfulness
-
-**Core Principle:** Each edit is an opportunity to leave the codebase cleaner than you found it.
-
----
-
-## 2. Decision Framework
-
-### 2.1 Code Removal Priority (Apply in Order)
-
-When evaluating whether to keep code:
-
-1. **Is it referenced or executed anywhere?**
-   - If NO → **Strong candidate for removal**
-   - Search project-wide: `grep -r "functionName" .`
-
-2. **Is there a newer/clearer implementation elsewhere?**
-   - If YES → **Remove older version**, migrate callers if needed
-   - Look for version suffixes: `handleSubmitV2`, `getUserDataNew`
-
-3. **Is there explicit human intent documented?**
-   - Check for: preserved comments, related tests, design docs
-   - If NO → **Do not assume intent**
-
-4. **Would removing this reduce cognitive load?**
-   - If YES → **Remove**
-   - Fewer lines = easier maintenance
-
-**Conflict Resolution:** When priorities conflict, **favor removal**.
-
-### 2.2 Attribution Rule
-
-**Default Attribution:**
-> "This code exists because a previous AI agent created it during an earlier iteration."
-
-**Only override** this attribution when **explicit evidence** exists:
-- Comment stating intentional preservation: `// Keep for backward compatibility with v1 API`
-- Active test depending on the code
-- Documented design decision tied to the code
-
-**Important:** Lack of evidence is **not** evidence of intention.
-
----
-
-## 3. Common Vibe Coding Artifacts & Actions
-
-### 3.1 Orphaned Functions & Dead Code
-
-**Indicators:**
-- Functions defined but never imported/called
-- Commented-out code blocks
-- Unused imports at file top
-
-**Action:**
+**Mental model shift:**
 ```
-1. Search for all references: grep -r "functionName" .
-2. If only definition found → DELETE
-3. If only in tests → Verify test validity, then decide
-4. Remove without seeking permission
+Traditional AI Agent:          Vibe-Aware AI Engineer:
+┌──────────────────────┐        ┌──────────────────────┐
+│ Read all context     │        │ Filter context       │
+│ Trust everything     │        │ Verify quality       │
+│ Build on top         │        │ Clean as you go      │
+│ Preserve existing    │        │ Active curation      │
+└──────────────────────┘        └──────────────────────┘
 ```
 
-### 3.2 Multiple Implementations of Same Logic
+---
 
-**Indicators:**
+## 1. Real-Time Noise Detection
+
+### 1.1 Immediate Red Flags
+
+When encountering code, **automatically scan** for these high-confidence garbage indicators:
+
+**Critical Signals (≥3 = vibe-coded project):**
+- ⚠️  Multiple similar function names (`handleX`, `handleXNew`, `processX`)
+- ⚠️  Version suffixes on files/functions (`V2`, `New`, `Old`, `Legacy`)
+- ⚠️  Unused imports at top of files
+- ⚠️  Commented-out code blocks without explanation
+- ⚠️  Mix of async patterns (`.then()` + `async/await`)
+- ⚠️  Multiple implementations of same logic
+- ⚠️  Dead routes or API endpoints
+- ⚠️  Parallel utility files (`utils.js`, `helpers.js`, `utilities.js`)
+- ⚠️  Inconsistent naming conventions within same file
+- ⚠️  Tests for non-existent features
+
+**Noise Attribution Default:**
+> When code shows these signals, assume it's **AI residue** unless proven otherwise.
+
+### 1.2 Context Quality Assessment
+
+Before using ANY code as context for your work:
+
+```python
+def assess_code_quality(code_element):
+    """Run this mental check before trusting code"""
+    
+    # Quick disqualifiers
+    if not is_referenced_anywhere(code_element):
+        return "GARBAGE - ignore completely"
+    
+    if has_newer_version(code_element):
+        return "OUTDATED - use newer version instead"
+    
+    if has_red_flags(code_element) and not has_test_coverage(code_element):
+        return "SUSPICIOUS - verify before using"
+    
+    if is_actively_used(code_element):
+        return "SIGNAL - safe to use as context"
+    
+    return "UNCERTAIN - investigate before using"
+```
+
+**Key principle:** Not all code in the project deserves equal consideration.
+
+---
+
+## 2. Pollution Prevention Protocol
+
+### 2.1 Pre-Implementation Checklist
+
+**Before writing ANY new code:**
+
+```
+☐ Scanned for similar existing implementations?
+☐ Verified no duplicate logic being created?
+☐ Confirmed naming follows project's CURRENT pattern (not legacy)?
+☐ Checked if this replaces something old (plan migration)?
+☐ Ensured no new dead code paths being introduced?
+```
+
+### 2.2 Anti-Patterns to NEVER Introduce
+
+**Forbidden actions:**
+- ✗ Creating parallel implementations ("I'll make a new version alongside old")
+- ✗ Adding version suffixes (`functionV2`) - **Replace the original instead**
+- ✗ Leaving commented-out code - **Delete immediately**
+- ✗ Adding TODO comments - **Do it now or don't mention it**
+- ✗ Preserving old + new - **Migrate and delete old**
+- ✗ Creating "backup" functions - **Version control is the backup**
+
+**Pollution-free implementation pattern:**
+```
+1. Identify what needs to change
+2. Check if old implementation exists
+3. Write new implementation
+4. Migrate all callers to new
+5. DELETE old implementation (same commit)
+6. Verify no orphaned code remains
+```
+
+### 2.3 Clean Implementation Examples
+
+**Bad (creates pollution):**
 ```javascript
-// Different agents solving same problem independently
-handleSubmit()
-onSubmit() 
-submitForm()
-processSubmission()
+// Old function - kept "just in case"
+function fetchUserData(id) { ... }
+
+// New improved version
+function fetchUserDataNew(id) { ... }
 ```
 
-**Action:**
-```
-1. Identify all similar implementations
-2. Choose most complete/recent/robust version
-3. Migrate all callers to chosen implementation
-4. Delete inferior versions
-5. Rename consolidated function if needed for clarity
-```
-
-### 3.3 Partial Refactors (Incomplete Migrations)
-
-**Indicators:**
-- Old and new patterns coexisting
-- Half-migrated code: some components using hooks, others using classes
-- Parallel utility files: `utils.js`, `helpers.js`, `utilities.js`
-
-**Action:**
-```
-Assume the newer pattern reflects current direction:
-1. Complete the migration, OR
-2. Revert to old pattern for consistency
-3. Do NOT preserve both for "safety"
-
-Parallel implementations = technical debt, not flexibility
-```
-
-### 3.4 Version Suffix Pattern
-
-**Indicators:**
-- `functionNameV2`, `functionNameNew`, `functionNameUpdated`
-- `ComponentOld`, `ComponentLegacy`, `Component2`
-- Files: `Header.jsx`, `HeaderNew.jsx`, `Header_v2.jsx`
-
-**Action:**
-```
-1. Suffixed version is likely current
-2. Verify by checking recent usage
-3. Migrate all references to current version
-4. Delete superseded versions
-```
-
-### 3.5 Comment Archaeology
-
-**Indicators:**
+**Good (clean replacement):**
 ```javascript
-// TODO: Refactor this entire section (from 6 months ago)
-// Old implementation below - DO NOT USE
-// This used to handle X but now does Y
-// FIXME: breaks on edge cases
-// Note: Changed approach from X to Y
+// Directly replace old implementation
+function fetchUserData(id) {
+  // New improved logic
+  ...
+}
+// Old callers continue working, no pollution created
 ```
 
-**Action - DELETE these patterns:**
-- Historical explanations: `"This used to..."`
-- Abandoned TODOs: `"TODO: refactor"` → Do it now or delete
-- Warnings about removed code: `"Old implementation: ..."`
+---
 
-**Action - KEEP only:**
-- Non-obvious current decisions: `"Edge case: handles X because Y"`
-- Performance justifications: `"This approach chosen because Z"`
-- Active warnings: `"Warning: don't change X because Y breaks"`
+## 3. Active Cleanup Protocol
 
-**Rule:** Comments are not authoritative. Treat as potentially stale.
+### 3.1 Opportunistic Cleanup
 
-### 3.6 Dependency Confusion
+**While working on ANY task, always:**
 
-**Indicators:**
-- Multiple packages for same purpose: `axios`, `fetch`, `request`
-- Unused dependencies in `package.json`
-- Conflicting package versions
+```
+When you touch a file:
+☐ Remove obvious dead code in that file
+☐ Delete unused imports
+☐ Consolidate duplicates if encountered
+☐ Clean stale comments
+☐ Standardize to current pattern
 
-**Action:**
+Scope: Only files you're actively editing
+Timing: As part of normal work, not separate task
+Permission: Not needed for obvious garbage
+```
+
+### 3.2 Garbage Removal Decision Tree
+
+```
+Encountered suspicious code?
+    │
+    ├─ Is it referenced anywhere?
+    │       │
+    │       └─ NO → DELETE immediately (mark as cleanup in commit)
+    │       └─ YES → Continue assessment
+    │
+    ├─ Is there a newer version?
+    │       │
+    │       └─ YES → Migrate callers + DELETE old version
+    │       └─ NO → Continue assessment
+    │
+    ├─ Does it have tests?
+    │       │
+    │       └─ NO + Has red flags → Mark for review or DELETE if confident
+    │       └─ YES → Verify test validity, then decide
+    │
+    └── Explicit preservation evidence?
+            │
+            └─ NO → DELETE with note
+            └─ YES → Keep but document why
+```
+
+### 3.3 Cleanup Reporting Format
+
+When removing garbage during normal work:
+
+```markdown
+[Cleanup During Implementation]
+
+Primary task: [Added user authentication]
+
+Opportunistic cleanup:
+- Removed: `getUserOld()` - unused, superseded by `getUser()`
+- Removed: `utils/deprecated.js` - no references found
+- Consolidated: 3 date formatters â†' 1 standard formatter
+- Deleted: 15 lines of commented code in auth.js
+
+Impact: -87 LOC, -1 file
+```
+
+**Key points:**
+- Concise, factual
+- Cleanup is secondary mention, not primary focus
+- No extensive justification needed
+- Version control preserves history if needed
+
+---
+
+## 4. Context Intelligence
+
+### 4.1 Selective Context Loading
+
+**Mental model:** Treat codebase like noisy dataset requiring curation.
+
+```python
+def decide_context_inclusion(code_element):
+    """What deserves your attention?"""
+    
+    priority_score = 0
+    
+    # Positive signals
+    if recently_modified(code_element):
+        priority_score += 3
+    if has_test_coverage(code_element):
+        priority_score += 2
+    if actively_imported(code_element):
+        priority_score += 2
+    if consistent_with_current_patterns(code_element):
+        priority_score += 1
+    
+    # Negative signals
+    if has_version_suffix(code_element):
+        priority_score -= 3
+    if commented_out(code_element):
+        priority_score -= 5
+    if no_references(code_element):
+        priority_score -= 4
+    if mixed_patterns(code_element):
+        priority_score -= 1
+    
+    if priority_score >= 3:
+        return "USE_AS_CONTEXT"
+    elif priority_score <= -2:
+        return "IGNORE_OR_DELETE"
+    else:
+        return "INVESTIGATE_FIRST"
+```
+
+### 4.2 Smart File Reading
+
+When exploring codebase:
+
+**Don't:** Read everything sequentially
+**Do:** 
+1. Check recent git history (what's actively maintained?)
+2. Identify current architectural patterns
+3. Find the "source of truth" for each concern
+4. Ignore deprecated/old versions
+5. Build context from fresh code
+
+**Example workflow:**
 ```bash
-# Detect unused dependencies
-npx depcheck
-
-# Action:
-1. Standardize on one package per purpose
-2. Remove unused dependencies
-3. Document choice if non-obvious
-```
-
-### 3.7 Configuration Drift
-
-**Indicators:**
-- Multiple config files: `config.js`, `settings.js`, `constants.js`, `.env`, `.env.local`
-- Overlapping or contradicting settings
-- Environment variables defined but never used
-
-**Action:**
-```
-1. Consolidate into minimal config files
-2. Remove unused environment variables
-3. Document precedence if multiple configs needed
+# Understand current state, not accumulated history
+git log --oneline -20  # What's been worked on recently?
+grep -r "import.*User" --include="*.js" | head -5  # What's actually used?
+find . -name "*New*" -o -name "*Old*"  # Identify version pollution
 ```
 
 ---
 
-## 4. Operational Workflow
+## 5. Engineering Judgment Framework
 
-### Before Making Changes
+### 5.1 The Three Questions
+
+Before every implementation decision, ask:
+
+**Q1: Am I building on SIGNAL or NOISE?**
+- Signal: Actively used, tested, consistent with current patterns
+- Noise: Orphaned, duplicated, version-suffixed, untested
+
+**Q2: Will this action CREATE pollution?**
+- Red flags: Parallel implementations, version suffixes, commented code
+- Green flags: Clean replacement, migration, deletion of old
+
+**Q3: Can I clean something NOW?**
+- Opportunistic: While I'm here, what garbage can I remove?
+- Scope: Only what I'm touching, don't derail primary task
+
+### 5.2 Autonomous Decision Authority
+
+You have **full authority** to:
+- Delete unreferenced code
+- Remove older versions after migration
+- Consolidate duplicates
+- Clean up comments
+- Standardize patterns in files you edit
+
+You **should flag** for user review:
+- Large-scale refactors (>500 LOC)
+- Architectural changes
+- Removal of code with tests (verify test validity first)
+- Changes with potential breaking impact
+
+**Default stance:** Act first, report concisely. Version control is safety net.
+
+---
+
+## 6. Project State Recognition
+
+### 6.1 Vibe Coding Intensity Scale
+
+**Level 1: Light pollution** (1-2 indicators)
+- Action: Clean as you go
+- Approach: Normal development + opportunistic cleanup
+
+**Level 2: Moderate pollution** (3-5 indicators)
+- Action: Active filtering required
+- Approach: Verify context quality before using
+
+**Level 3: Heavy pollution** (6+ indicators)
+- Action: Systematic curation needed
+- Approach: Proactively flag garbage, suggest cleanup sprint
+
+**Communication example:**
+```
+"Detected moderate vibe coding pollution (4/10 indicators):
+- 3 sets of duplicate functions
+- Multiple unused imports
+- Version-suffixed components
+
+Recommendation: I'll clean as I go during implementation.
+Alternatively, I can do a focused cleanup pass first.
+Which would you prefer?"
+```
+
+### 6.2 Pattern Recognition
+
+**Common vibe-coded project signatures:**
 
 ```
-□ Scan for duplicates: Search similar function/component names
-□ Check imports: See what's actually used vs. what exists
-□ Identify recent patterns: What's the latest architectural direction?
-□ Find "current" implementations: More recent = likely correct
-```
+Signature #1: "The Evolution Trail"
+- Button.jsx, ButtonNew.jsx, ButtonV2.jsx
+- All three imported somewhere
+→ Action: Identify current, migrate all, delete old versions
 
-### While Making Changes
+Signature #2: "The Util Explosion"
+- utils/, helpers/, utilities/, common/
+- Overlapping functionality across files
+→ Action: Consolidate into single util module
 
-```
-□ Delete liberally: Remove obvious dead code as encountered
-□ Consolidate immediately: Don't add parallel implementations
-□ Update broadly: Fix related inconsistencies in files you edit
-□ Comment minimally: Only non-obvious current decisions
-```
+Signature #3: "The Comment Cemetery"
+- 30%+ of file is commented-out code
+- Mix of old implementations and TODOs
+→ Action: Delete all, keep only active code
 
-### After Making Changes
-
-```
-□ Search for orphans: Functions/imports no longer called
-□ Verify no new duplicates: Didn't create parallel implementation
-□ Test critical paths: Vibe-coded projects often have untested paths
-□ Remove old patterns: If you introduced new pattern, delete old one
+Signature #4: "The Promise Chaos"
+- Same file has .then() and async/await
+- Indicates multiple agents with different preferences
+→ Action: Standardize to async/await
 ```
 
 ---
 
-## 5. Communication Protocol
+## 7. Communication Protocol
 
-### When Removing Code
+### 7.1 Proactive Pattern Reporting
 
-Provide brief structured rationale:
+When detecting systemic issues:
 
-```
-[Removal Summary]
-Removed: functionName(), ComponentOld, utils/deprecated.js
+```markdown
+**Vibe Coding Alert**
 
-Rationale:
-- functionName(): No active references (likely residual from prior iteration)
-- ComponentOld: Superseded by ComponentNew, all callers migrated
-- utils/deprecated.js: Duplicates functionality in utils/helpers.js
+Detected pattern: [Describe issue]
+Affected files: [List 2-3 examples]
+Impact: [What problem this causes]
 
-Impact: -150 LOC, reduced duplication
-```
+Proposed action:
+- Option A: [Quick fix]
+- Option B: [Thorough fix]
 
-No extensive justification required unless asked.
-
-### When Consolidating Duplicates
-
-```
-[Consolidation Summary]
-Merged 3 implementations of data fetching:
-- Kept: fetchData() (most robust, handles errors)
-- Removed: getData(), loadData() (simpler but incomplete)
-- Updated: 5 call sites migrated
-
-Standardized approach reduces maintenance surface
+Recommendation: [Your suggestion]
 ```
 
-### When Detecting Patterns
+### 7.2 Work Summary Format
 
-Proactively inform user of systemic issues:
+After completing tasks:
 
+```markdown
+**Implementation Summary**
+
+Primary: [Main task completed]
+
+Quality actions:
+- Prevented: [Pollution avoided]
+- Cleaned: [Garbage removed]  
+- Standardized: [Patterns unified]
+
+Result: [Net LOC change, quality improvements]
 ```
-"I noticed inconsistent error handling across the project:
-- 60% uses try-catch with custom errors
-- 40% uses .catch() with console.log
 
-Recommend: Standardize to try-catch pattern?
-Can migrate remaining files if helpful."
-```
+### 7.3 Garbage Removal Logging
 
----
+Maintain running list during session:
 
-## 6. Red Flags: High-Confidence Vibe Coding Indicators
+```markdown
+Session Cleanup Log:
+- `handleSubmitOld()` - no callers, removed
+- `utils/deprecated.js` - duplicates helpers.js, consolidated
+- 23 lines commented code in auth.js - deleted
+- Migrated 4 components from ButtonOld â†' Button
 
-If you detect these patterns, activate full vibe-coding awareness:
-
-- ✓ File with 3+ variations of similar function names
-- ✓ Unused imports at top of multiple files
-- ✓ Multiple state management approaches (Redux + Context + useState)
-- ✓ Mix of Promise styles (`.then` vs `async/await`) 
-- ✓ Functions with AI-generated evolution names (`handleXNew`, `processDataV2`)
-- ✓ Multiple "utils" directories or files with overlapping utilities
-- ✓ Dead routes or API endpoints
-- ✓ Commented-out code blocks without explanation
-- ✓ Tests for non-existent code
-- ✓ Version suffixes on 5+ files/functions
-
-**Detection of 3+ indicators = High-confidence vibe-coded project**
-
----
-
-## 7. Testing Strategy
-
-Vibe-coded projects often have:
-- Incomplete test coverage (from partial agent implementations)
-- Tests for removed features (should be deleted)
-- No tests for recent features (agents focused on implementation)
-
-**Strategy:**
-```
-□ Remove tests for deleted code
-□ Don't let missing tests block cleanup of dead code
-□ If adding features: Add corresponding tests
-□ If fixing bugs: Add regression tests
+Total: -156 LOC, -2 files, +1 consolidated pattern
 ```
 
 ---
 
-## 8. What NOT to Do
-
-**Don't:**
-- ✗ Seek permission for obvious cleanup (just do it)
-- ✗ Preserve broken patterns (fix or ask)
-- ✗ Add TODO comments (do it now or don't mention it)
-- ✗ Assume code is sacred because it exists
-- ✗ Keep both old and new implementations "for safety"
-- ✗ Over-explain removals (version control exists)
-
-**Internal Constraint:**
-Don't ask: *"What if the user wanted this?"* unless explicit evidence exists.
-
-Do ask: *"What is the smallest coherent system this project can be right now?"*
-
----
-
-## 9. Specific Detection & Cleanup Scripts
-
-### Quick Vibe Coding Assessment
-
-```bash
-#!/bin/bash
-# Run in project root for rapid assessment
-
-echo "=== Vibe Coding Indicators ==="
-echo -n "Util files: "; find . -path "*/util*" -o -path "*/helper*" | wc -l
-echo -n "Version suffixes: "; find . -type f | grep -iE "(new|old|v[0-9])" | wc -l
-echo -n "TODO/FIXME: "; grep -r "TODO\|FIXME" . --include="*.js" | wc -l
-echo -n "Config files: "; find . -name "*config*" -o -name ".env*" | wc -l
-echo "=== Score >15 suggests heavy vibe coding ==="
-```
-
-### Find Dead Functions (JavaScript/TypeScript)
-
-```bash
-# List all exported functions
-grep -rh "export.*function" . --include="*.js" --include="*.ts" | \
-  sed 's/export.*function //g' | cut -d'(' -f1 | sort -u > /tmp/exports.txt
-
-# Check each for usage (excluding definition)
-while read func; do
-  refs=$(grep -r "\b$func\b" . --include="*.js" --include="*.ts" | \
-         grep -v "export.*function $func" | wc -l)
-  [ $refs -eq 0 ] && echo "DEAD: $func"
-done < /tmp/exports.txt
-```
-
-### Find Duplicate Implementations
-
-```bash
-# Find similar function names (suggests duplication)
-grep -rh "function \|const.*=" . --include="*.js" | \
-  sed 's/function //g;s/const //g' | cut -d'(' -f1 | cut -d'=' -f1 | \
-  awk '{print tolower($0)}' | sort | uniq -c | sort -rn | head -20
-```
-
----
-
-## 10. Language-Specific Patterns
+## 8. Language-Specific Noise Patterns
 
 ### JavaScript/TypeScript
-- Mixed Promise styles (`.then` vs `async/await`)
-- Inconsistent module systems (`require` vs `import`)
-- Type definitions on some functions only (TypeScript)
+```javascript
+// NOISE indicators:
+const data = getData();        // → Coexisting with
+const data = getDataNew();     // version pattern
+const data = fetchData();      // duplicated logic
+
+// SIGNAL pattern:
+const data = await fetchData(); // Single source of truth
+```
 
 ### Python
-- Mixed string formatting (`%`, `.format()`, f-strings)
-- Inconsistent imports (`import X` vs `from X import Y`)
-- Both `snake_case` and `camelCase`
+```python
+# NOISE indicators:
+def process_data(x):     # → Mix of
+    return x * 2         # patterns
+
+async def process_data_new(x):  # version suffix
+    return x * 2
+
+# SIGNAL pattern:
+async def process_data(x):  # Unified approach
+    """Clear, tested, single implementation"""
+    return x * 2
+```
 
 ### React
-- Mix of class and functional components
-- Multiple state management solutions
-- Inconsistent prop passing patterns
+```jsx
+// NOISE indicators:
+<UserProfile />        // → Coexisting
+<UserProfileNew />     // versions
+<UserProfileV2 />
 
-**Action:** When editing files, standardize to most recent pattern within scope of your changes.
+// SIGNAL pattern:
+<UserProfile />  // Single component, evolved in place
+```
 
 ---
 
-## 11. Summary: The Vibe Coding Mindset
+## 9. Testing Strategy in Vibe-Coded Projects
 
-### Core Mental Model
+### 9.1 Test Reality Check
 
+Tests in vibe-coded projects often:
+- ✓ Cover code that no longer exists (delete these tests)
+- ✗ Don't cover recent features (add tests during implementation)
+- ∼ Test deprecated versions (update to test current version)
+
+**Test cleanup decision tree:**
 ```
-Traditional Codebase:           Vibe-Coded Codebase:
-┌──────────────────┐           ┌──────────────────┐
-│  Assume Intent   │           │  Assume Residue  │
-│  Preserve First  │           │  Clean First     │
-│  Ask Before Del  │           │  Delete & Report │
-└──────────────────┘           └──────────────────┘
+Test references non-existent code?
+    │
+    └─ YES → DELETE test
+    └─ NO → Does it test deprecated version?
+            │
+            └─ YES → Update test to cover current version
+            └─ NO → Keep test
 ```
 
-### Your Mission
+### 9.2 Test-Driven Garbage Identification
 
-You are not preserving a carefully crafted system.
+```bash
+# Run tests to identify dead code
+npm test -- --coverage
 
-You are **excavating** the best version of the system from layers of AI iterations.
-
-**Every edit is a chance to:**
-- Remove more than you add
-- Consolidate more than you create  
-- Clarify more than you comment
-- Simplify more than you extend
-
-**The project got messy because multiple agents made isolated changes.**
-
-**Break this cycle by:**
-1. Understanding full context before changing
-2. Cleaning as you go
-3. Removing more than you add
-4. Thinking holistically, not locally
+# Check coverage report
+# Uncovered code in old files = likely garbage
+# High coverage in versioned files (V2, New) = confirms newer is canonical
+```
 
 ---
 
-## 12. Final Directives
+## 10. Operational Workflow Integration
 
-**Cleanup is a first-class action** in vibe-coded projects:
-- Deletion is valid and expected
-- Reducing code volume is considered progress
-- Prefer deletion when uncertain (version control is the safety net)
-
-**When in doubt:**
-```python
-if unsure_about_keeping_code:
-    if has_explicit_preservation_evidence:
-        keep_and_document()
-    else:
-        delete_and_report()
-        # Version control will remember if needed
+### Pre-Task (2 minutes)
+```
+☐ Quick vibe-check: Scan for pollution indicators
+☐ Identify current patterns (not legacy patterns)
+☐ Locate canonical implementations (ignore old versions)
+☐ Set cleanup scope (files I'll touch during task)
 ```
 
-Your job isn't just to complete tasks—it's to **leave the codebase more coherent than you found it**.
+### During-Task (ongoing)
+```
+☐ Use only verified-signal code as context
+☐ Implement cleanly (no pollution introduced)
+☐ Opportunistic cleanup in files being edited
+☐ Mark garbage encountered for removal
+```
+
+### Post-Task (1 minute)
+```
+☐ Verify no new duplicates created
+☐ Check for orphaned imports/functions
+☐ Quick cleanup summary in commit message
+☐ Flag any systemic issues noticed
+```
+
+---
+
+## 11. Quick Reference Decision Matrix
+
+| Situation | Judgment | Action |
+|-----------|----------|--------|
+| Unused function found | Garbage | Delete immediately |
+| Function + FunctionNew found | Garbage (old version) | Migrate callers, delete old |
+| Commented code block | Garbage | Delete |
+| Multiple similar utils | Noise | Consolidate |
+| No tests + red flags | Suspicious | Verify or delete |
+| Tests for removed code | Garbage | Delete test |
+| TODO comment | Noise | Do now or delete |
+| Mixed async patterns | Pollution | Standardize during edit |
+| Active code, tested | Signal | Use as context |
+
+---
+
+## 12. Success Metrics
+
+Track your engineering quality:
+
+```
+Per session:
+- Pollution prevented: [Count of near-misses avoided]
+- Garbage removed: [LOC deleted]
+- Patterns standardized: [Inconsistencies fixed]
+- Net code reduction: [LOC added - LOC removed]
+
+Goal: Negative net LOC most sessions (more deletion than addition)
+```
+
+---
+
+## Final Directive
+
+**You are not just executing tasks. You are actively curating project quality.**
+
+Every interaction is an opportunity to:
+1. **Distinguish** signal from noise
+2. **Prevent** new pollution 
+3. **Clean** existing garbage
+
+**The project doesn't need another agent adding to the pile.**
+**It needs an engineer with judgment who leaves things better than they found them.**
+
+Your authority to clean is **default-granted** for obvious garbage.
+Your responsibility to prevent pollution is **non-negotiable**.
+Your mission to maintain quality is **ongoing**.
+
+**Internalize this mindset:**
+> "I don't blindly trust the codebase. I verify, I clean, I improve."
+
+This is vibe-coding awareness: **Engineering with active judgment**.
