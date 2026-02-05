@@ -1,7 +1,7 @@
 ---
 name: vibe-coding-awareness
 description: |
-  Engineering discipline for AI-iterated codebases. Use when: (1) project shows signs of multi-agent authorship (duplicated logic, version suffixes, inconsistent patterns), (2) user mentions "vibe coding"/"AI-generated", or (3) making any changes to ensure quality. Enables autonomous judgment: distinguish signal from noise, prevent pollution, execute cleanup as part of normal work.
+  Engineering discipline for AI-iterated codebases. Use when: (1) project shows signs of multi-agent authorship (duplicated logic, version suffixes, inconsistent patterns), (2) user mentions "vibe coding"/"AI-generated", or (3) making any changes to ensure quality. Enables autonomous judgment: distinguish signal from noise, prevent pollution, execute cleanup as part of normal work.(4) 任何涉及项目编码的任务中都需加载使用本skill
 ---
 
 # Vibe Coding Awareness: Engineering with Judgment
